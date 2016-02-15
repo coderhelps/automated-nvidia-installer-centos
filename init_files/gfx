@@ -1,0 +1,58 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# Provides:          gfx
+# chkconfig: 345 99 01
+### END INIT INFO
+
+# a script for rebuilding proprietary graphics drivers on boot as needed
+
+### To enable this script...
+# 1. download the proprietary driver installer from nvidia.com OR ati.com and move it to /usr/src/
+#       wget http://us.download.nvidia.com/XFree86/Linux-x86_64/195.36.24/NVIDIA-Linux-x86_64-195.36.24-pkg2.run
+#       mv NVIDIA-Linux-x86-195.36.24-pkg1.run /usr/src/
+# 2. create a symlink to the installer as /usr/src/nvidia.run OR /usr/src/ati.run
+#       cd /usr/src/
+#       ln -s NVIDIA-Linux-x86_64-195.36.24-pkg2.run nvidia.run
+# 3. move this script to init.d, make it executable and link to runlevel 5
+#       mv gfx /etc/init.d/
+#       chmod +x /etc/init.d/gfx
+#       ln -s /etc/init.d/gfx /etc/rc5.d/S99gfx
+# 4. reboot
+
+### NVIDIA driver
+# /lib/modules/2.6.18-92.1.18.el5/kernel/drivers/video/nvidia.ko
+# nvidia-xconfig --twinview --xinerama
+if [ -f /usr/src/nvidia.run ]; then
+{
+  if [ -f /lib/modules/`uname -r`/kernel/drivers/video/nvidia.ko ]; then
+  {
+    echo "NVIDIA DRIVER PRESENT"
+    /sbin/insmod /lib/modules/`uname -r`/kernel/drivers/video/nvidia.ko
+  }
+  else
+  {
+    echo "NVIDIA DRIVER UPDATING"
+    mkdir -p /root/nvidiatmp
+    /usr/src/nvidia.run --silent --tmpdir /root/nvidiatmp
+    rm -rf /root/nvidiatmp
+  } fi
+} fi
+
+
+### ATI driver
+# /lib/modules/2.6.18-92.1.18.el5/kernel/drivers/char/drm/fglrx.ko
+# aticonfig --initial=dual-head --desktop-setup=horizontal --screen-layout=left --xinerama=on --resolution=1,1600x1200 --resolution=0,1920x1200
+if [ -f /usr/src/ati.run ]; then
+{
+  if [ -f /lib/modules/`uname -r`/kernel/drivers/char/drm/fglrx.ko ]; then
+  {
+    echo "ATI DRIVER PRESENT"
+  }
+  else
+  {
+    echo "ATI DRIVER UPDATING"
+    /usr/src/ati.run
+  } fi
+} fi
+
